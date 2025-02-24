@@ -1,21 +1,15 @@
 export default async function handler(req, res) {
-  const { path } = req.query;
+    const { slug } = req.query;
+    if (!slug || slug.length < 2) return res.status(400).send("Invalid URL format!");
 
-  if (!path) {
-    return res.status(400).json({ error: "File path is required!" });
-  }
+    try {
+        const [cloudName, fileName] = slug;
+        const response = await fetch(`https://res.cloudinary.com/ddivtyns4/image/upload/${fileName}`);
+        if (!response.ok) return res.status(404).send("File not found!");
 
-  const cloudinaryURL = `https://res.cloudinary.com/ddivtyns4/image/upload/${path}`;
-
-  try {
-    const response = await fetch(cloudinaryURL);
-    if (!response.ok) throw new Error("File not found!");
-
-    const data = await response.arrayBuffer();
-
-    res.setHeader("Content-Type", response.headers.get("Content-Type"));
-    res.send(Buffer.from(data));
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch file!" });
-  }
+        res.setHeader("Content-Type", response.headers.get("content-type"));
+        res.send(Buffer.from(await response.arrayBuffer()));
+    } catch {
+        res.status(500).send("Server error!");
+    }
 }
