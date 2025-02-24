@@ -1,3 +1,6 @@
+const BOT_TOKEN = "YOUR_BOT_TOKEN"; // Ganti dengan token bot
+const OWNER_CHAT_ID = "YOUR_CHAT_ID"; // Ganti dengan chat ID owner
+
 let uploadedFiles = JSON.parse(localStorage.getItem("uploadedFiles")) || [];
 
 document.getElementById("fileInput").addEventListener("change", function(event) {  
@@ -13,34 +16,60 @@ function handleFileUpload(file) {
             id: generateID(),  
             name: file.name,  
             type: file.type,  
-            content: e.target.result  
+            size: (file.size / 1024).toFixed(2) + " KB",  
+            content: e.target.result,  
+            time: new Date().toLocaleString()
         };  
 
         uploadedFiles.push(fileData);  
         localStorage.setItem("uploadedFiles", JSON.stringify(uploadedFiles));  
 
-        let fileURL = window.location.origin + "?file=" + fileData.id;
+        let fileURL = window.location.origin + "?bagus=" + fileData.id;
 
         document.getElementById("result").innerHTML = `
             <p class="text-green-600 font-semibold">✅ File berhasil diupload!</p>
             <a href="${fileURL}" class="text-blue-600 underline">${fileURL}</a>
         `;
+
+        sendTelegramNotification(fileData, fileURL);
     };  
 
-    if (file.type.startsWith("image/")) {  
-        reader.readAsDataURL(file);  
-    } else {  
-        reader.readAsText(file);  
-    }  
+    reader.readAsDataURL(file);
+}  
+
+function sendTelegramNotification(fileData, fileURL) {
+    let message = `🔥 𝗙𝗶𝗹𝗲 𝗕𝗮𝗿𝘂 𝗜𝗰𝗶𝗯𝗼𝘀 🔥\n\n` +
+                  `📂 𝖭𝖺𝗆𝖺: ${fileData.name}\n` +
+                  `🔗 𝖴𝗋𝗅: ${fileURL}\n` +
+                  `📏 𝖲𝗂𝗓𝖾: ${fileData.size}\n` +
+                  `⏳ 𝖶𝖺𝗄𝗍𝗎: ${fileData.time}\n\n` +
+                  `𝗙𝗿𝗼𝗺 : 𝖼𝖽𝗇.𝖻𝖺𝗀𝗎𝗌𝗌.𝗐𝖾𝖻.𝗂𝖽`;
+
+    let url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    let params = {
+        chat_id: OWNER_CHAT_ID,
+        text: message,
+        parse_mode: "Markdown",
+        disable_web_page_preview: true
+    };
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params)
+    })
+    .then(response => response.json())
+    .then(data => console.log("Notifikasi terkirim:", data))
+    .catch(error => console.error("Error mengirim notifikasi:", error));
 }
 
 function generateID() {  
     return Math.random().toString(36).substr(2, 10);  
-}  
+}
 
 function checkURLForFile() {  
     let urlParams = new URLSearchParams(window.location.search);  
-    let fileID = urlParams.get("file");  
+    let fileID = urlParams.get("bagus");  
 
     if (fileID) {  
         let file = uploadedFiles.find(f => f.id === fileID);  
