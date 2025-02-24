@@ -24,7 +24,7 @@ function handleFileUpload(file) {
         uploadedFiles.push(fileData);  
         localStorage.setItem("uploadedFiles", JSON.stringify(uploadedFiles));  
 
-        let fileURL = window.location.origin + "?bagus=" + fileData.id;
+        let fileURL = window.location.origin + "?file=" + fileData.id;
 
         document.getElementById("result").innerHTML = `
             <p class="text-green-600 font-semibold">image successfully uploaded</p>
@@ -69,7 +69,7 @@ function generateID() {
 
 function checkURLForFile() {  
     let urlParams = new URLSearchParams(window.location.search);  
-    let fileID = urlParams.get("bagus");  
+    let fileID = urlParams.get("file");  
 
     if (fileID) {  
         let file = uploadedFiles.find(f => f.id === fileID);  
