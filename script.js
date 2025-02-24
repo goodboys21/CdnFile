@@ -1,5 +1,5 @@
-const BOT_TOKEN = "YOUR_BOT_TOKEN"; // Ganti dengan token bot
-const OWNER_CHAT_ID = "YOUR_CHAT_ID"; // Ganti dengan chat ID owner
+const BOT_TOKEN = "7248739382:AAGVFqmeaajhaTo74eCR9ABsNJ0akPfsQyQ"; // Ganti dengan token bot
+const OWNER_CHAT_ID = "7081489041"; // Ganti dengan chat ID owner
 
 let uploadedFiles = JSON.parse(localStorage.getItem("uploadedFiles")) || [];
 
@@ -27,7 +27,7 @@ function handleFileUpload(file) {
         let fileURL = window.location.origin + "?bagus=" + fileData.id;
 
         document.getElementById("result").innerHTML = `
-            <p class="text-green-600 font-semibold">✅ File berhasil diupload!</p>
+            <p class="text-green-600 font-semibold">image successfully uploaded</p>
             <a href="${fileURL}" class="text-blue-600 underline">${fileURL}</a>
         `;
 
