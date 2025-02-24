@@ -1,15 +1,25 @@
 export default async function handler(req, res) {
-    const { slug } = req.query;
-    if (!slug || slug.length < 2) return res.status(400).send("Invalid URL format!");
-
-    try {
-        const [cloudName, fileName] = slug;
-        const response = await fetch(`https://res.cloudinary.com/ddivtyns4/image/upload/${fileName}`);
-        if (!response.ok) return res.status(404).send("File not found!");
-
-        res.setHeader("Content-Type", response.headers.get("content-type"));
-        res.send(Buffer.from(await response.arrayBuffer()));
-    } catch {
-        res.status(500).send("Server error!");
+  try {
+    const { cloudName, fileName } = req.query;
+    
+    if (!cloudName || !fileName) {
+      return res.status(400).json({ error: "Invalid URL format! Use /api/proxy?cloudName=yourCloud&fileName=yourFile.jpg" });
     }
+
+    const imageUrl = `https://res.cloudinary.com/ddivtyns4/image/upload/${fileName}`;
+    const response = await fetch(imageUrl);
+
+    if (!response.ok) {
+      return res.status(404).json({ error: "File not found!" });
+    }
+
+    const contentType = response.headers.get("Content-Type");
+    const imageBuffer = await response.arrayBuffer();
+
+    res.setHeader("Content-Type", contentType);
+    res.send(Buffer.from(imageBuffer));
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 }
