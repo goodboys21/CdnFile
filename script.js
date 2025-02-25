@@ -1,6 +1,5 @@
 const BOT_TOKEN = "7248739382:AAGVFqmeaajhaTo74eCR9ABsNJ0akPfsQyQ"; // Ganti dengan token bot
 const OWNER_CHAT_ID = "7081489041"; // Ganti dengan chat ID owner
-const CUSTOM_DOMAIN = "https://cdn.baguss.web.id/"; // Domain custom kamu
 
 document.getElementById("fileInput").addEventListener("change", function(event) {
     handleFileUpload(event.target.files[0]);
@@ -9,33 +8,31 @@ document.getElementById("fileInput").addEventListener("change", function(event) 
 function handleFileUpload(file) {
     if (!file) return;
 
-const formData = new FormData();
-formData.append("file", fileInput.files[0]);
+    let formData = new FormData();
+    formData.append("file", file);
 
-fetch("https://i.supa.codes/api/upload", {
-  method: "POST",
-  body: formData
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error("Error:", error));
-        if (data.status === "success" && data.url) {
-            let originalURL = data.url; // Misal: https://i.supa.codes/pYRiy
-            let fileID = originalURL.split("/").pop(); // Ambil "pYRiy"
-            let customURL = CUSTOM_DOMAIN + fileID; // Ubah ke domain custom
+    fetch("https://cdn.rafaelxd.tech/", {
+        method: "POST",
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.url) {
+            let fileURL = data.url.replace("cdn.rafaelxd.tech", "cdn.baguss.web.id");
 
             document.getElementById("result").innerHTML = `
                 <p class="text-green-600 font-semibold">✅ File berhasil diupload!</p>
-                <a href="${customURL}" class="text-blue-600 underline">${customURL}</a>
+                <a href="${fileURL}" class="text-blue-600 underline">${fileURL}</a>
             `;
-            sendTelegramNotification(file, customURL);
+
+            sendTelegramNotification(file, fileURL);
         } else {
-            document.getElementById("result").innerHTML = `<p class="text-red-600">❌ Gagal mengunggah file!</p>`;
+            document.getElementById("result").innerHTML = `<p class="text-red-600">❌ Gagal upload file</p>`;
         }
     })
     .catch(error => {
-        console.error("Error:", error);
-        document.getElementById("result").innerHTML = `<p class="text-red-600">❌ Terjadi kesalahan!</p>`;
+        console.error("Error upload:", error);
+        document.getElementById("result").innerHTML = `<p class="text-red-600">❌ Gagal upload file</p>`;
     });
 }
 
@@ -64,3 +61,25 @@ function sendTelegramNotification(file, fileURL) {
     .then(data => console.log("Notifikasi terkirim:", data))
     .catch(error => console.error("Error mengirim notifikasi:", error));
 }
+
+function checkURLForFile() {
+    let urlParams = new URLSearchParams(window.location.search);
+    let fileID = urlParams.get("bagus");
+
+    if (fileID) {
+        let uploadedFiles = JSON.parse(localStorage.getItem("uploadedFiles")) || [];
+        let file = uploadedFiles.find(f => f.id === fileID);
+
+        if (file) {
+            if (file.type.startsWith("image/")) {
+                document.body.innerHTML = `<img src="${file.content}" alt="${file.name}" class="uploaded-image">`;
+            } else {
+                document.body.innerHTML = `<pre>${file.content}</pre>`;
+            }
+        } else {
+            document.body.innerHTML = `<p>⚠️ File tidak ditemukan</p>`;
+        }
+    }
+}
+
+checkURLForFile();
