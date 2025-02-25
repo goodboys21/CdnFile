@@ -9,15 +9,16 @@ document.getElementById("fileInput").addEventListener("change", function(event) 
 function handleFileUpload(file) {
     if (!file) return;
 
-    let formData = new FormData();
-    formData.append("file", file);
+const formData = new FormData();
+formData.append("file", fileInput.files[0]);
 
-    fetch("https://i.supa.codes/api/upload", {
-        method: "POST",
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
+fetch("https://i.supa.codes/api/upload", {
+  method: "POST",
+  body: formData
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error("Error:", error));
         if (data.status === "success" && data.url) {
             let originalURL = data.url; // Misal: https://i.supa.codes/pYRiy
             let fileID = originalURL.split("/").pop(); // Ambil "pYRiy"
