@@ -1,7 +1,5 @@
 const axios = require('axios');
 const fs = require('fs');
-const https = require("https");
-
 const FormData = require('form-data');
 const QRCode = require('qrcode');
 
@@ -37,35 +35,10 @@ function generateExpirationTime() {
     return expirationTime;
 }
 
-async function elxyzFile(Path) {
-    return new Promise(async (resolve, reject) => {
-        if (!fs.existsSync(Path)) return reject(new Error("File not Found"));
-
-        try {
-            const form = new FormData();
-            form.append("file", fs.createReadStream(Path));
-
-            const response = await axios.post('https://cdn.bgs.ct.ws/index.php', form, {
-                headers: form.getHeaders(),
-                onUploadProgress: (progressEvent) => {
-                    if (progressEvent.lengthComputable) {
-                        console.log(`🚀 Upload Progress: ${(progressEvent.loaded * 100) / progressEvent.total}%`);
-                    }
-                }
-            });
-
-            resolve(response.data);
-        } catch (error) {
-            reject(error);
-        }
-    });
-}
-
-
-
 async function createQRIS(amount, codeqr) {
     try {
         let qrisData = codeqr;
+
         qrisData = qrisData.slice(0, -4);
         const step1 = qrisData.replace("010211", "010212");
         const step2 = step1.split("5802ID");
@@ -76,21 +49,21 @@ async function createQRIS(amount, codeqr) {
 
         const result = step2[0] + uang + step2[1] + convertCRC16(step2[0] + uang + step2[1]);
 
-        // Generate QR Code langsung ke buffer (tanpa file)
-        const qrCodeBuffer = await QRCode.toBuffer(result);
+        await QRCode.toFile('qr_image.png', result);
 
         const form = new FormData();
-        form.append('file', qrCodeBuffer, { filename: "qris.png", contentType: "image/png" });
+        form.append('file', fs.createReadStream('qr_image.png'));
 
-        const response = await axios.post("https://cdn.bgs.ct.ws/index.php", form, {
+        const response = await axios.post('https://cdn.bgs.ct.ws/upload', form, {
             headers: form.getHeaders(),
-            httpsAgent: new https.Agent({ rejectUnauthorized: false }),
             onUploadProgress: (progressEvent) => {
                 if (progressEvent.lengthComputable) {
                     console.log(`🚀 Upload Progress: ${(progressEvent.loaded * 100) / progressEvent.total}%`);
                 }
             }
         });
+
+        fs.unlinkSync('qr_image.png');
 
         return {
             transactionId: generateTransactionId(),
@@ -107,4 +80,4 @@ async function createQRIS(amount, codeqr) {
 module.exports = {
   createQRIS,
   elxyzFile
-}
+};
