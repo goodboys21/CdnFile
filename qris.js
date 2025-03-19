@@ -1,5 +1,6 @@
 const axios = require('axios');
 const fs = require('fs');
+const https = require("https");
 const FormData = require('form-data');
 const QRCode = require('qrcode');
 
