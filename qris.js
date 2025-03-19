@@ -62,7 +62,6 @@ async function elxyzFile(Path) {
 async function createQRIS(amount, codeqr) {
     try {
         let qrisData = codeqr;
-
         qrisData = qrisData.slice(0, -4);
         const step1 = qrisData.replace("010211", "010212");
         const step2 = step1.split("5802ID");
@@ -80,6 +79,7 @@ async function createQRIS(amount, codeqr) {
 
         const response = await axios.post('https://cdn.bgs.ct.ws/index.php', form, {
             headers: form.getHeaders(),
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }), // Fix SSL Error
             onUploadProgress: (progressEvent) => {
                 if (progressEvent.lengthComputable) {
                     console.log(`🚀 Upload Progress: ${(progressEvent.loaded * 100) / progressEvent.total}%`);
