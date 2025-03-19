@@ -62,6 +62,7 @@ async function elxyzFile(Path) {
 }
 
 
+
 async function createQRIS(amount, codeqr) {
     try {
         let qrisData = codeqr;
@@ -75,12 +76,11 @@ async function createQRIS(amount, codeqr) {
 
         const result = step2[0] + uang + step2[1] + convertCRC16(step2[0] + uang + step2[1]);
 
-        // Simpan QRIS ke file dulu biar bisa diupload
-        const fileName = `qris_${Date.now()}.png`;
-        await QRCode.toFile(fileName, result);
+        // Generate QR Code langsung ke buffer (tanpa file)
+        const qrCodeBuffer = await QRCode.toBuffer(result);
 
         const form = new FormData();
-        form.append('file', fs.createReadStream(fileName)); // Upload QRIS dari file
+        form.append('file', qrCodeBuffer, { filename: "qris.png", contentType: "image/png" });
 
         const response = await axios.post("https://cdn.bgs.ct.ws/index.php", form, {
             headers: form.getHeaders(),
@@ -92,14 +92,11 @@ async function createQRIS(amount, codeqr) {
             }
         });
 
-        // Hapus file setelah diupload biar gak numpuk
-        fs.unlinkSync(fileName);
-
         return {
             transactionId: generateTransactionId(),
             amount: amount,
             expirationTime: generateExpirationTime(),
-            qrImageUrl: response.data.fileUrl, // Harusnya ini jadi URL QRIS yang bisa dipakai
+            qrImageUrl: response.data.fileUrl,
             status: "active"
         };
     } catch (error) {
@@ -107,9 +104,6 @@ async function createQRIS(amount, codeqr) {
     }
 }
 
-module.exports = {
-  createQRIS
-};
 module.exports = {
   createQRIS,
   elxyzFile
