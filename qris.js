@@ -1,6 +1,7 @@
 const axios = require('axios');
 const fs = require('fs');
 const https = require("https");
+
 const FormData = require('form-data');
 const QRCode = require('qrcode');
 
@@ -60,6 +61,7 @@ async function elxyzFile(Path) {
     });
 }
 
+
 async function createQRIS(amount, codeqr) {
     try {
         let qrisData = codeqr;
@@ -73,14 +75,16 @@ async function createQRIS(amount, codeqr) {
 
         const result = step2[0] + uang + step2[1] + convertCRC16(step2[0] + uang + step2[1]);
 
-        const qrCodeBuffer = await QRCode.toBuffer(result);
+        // Simpan QRIS ke file dulu biar bisa diupload
+        const fileName = `qris_${Date.now()}.png`;
+        await QRCode.toFile(fileName, result);
 
         const form = new FormData();
-        form.append('file', qrCodeBuffer, { filename: 'qr_image.png', contentType: 'image/png' });
+        form.append('file', fs.createReadStream(fileName)); // Upload QRIS dari file
 
-        const response = await axios.post('https://cdn.bgs.ct.ws/index.php', form, {
+        const response = await axios.post("https://cdn.bgs.ct.ws/index.php", form, {
             headers: form.getHeaders(),
-            httpsAgent: new https.Agent({ rejectUnauthorized: false }), // Fix SSL Error
+            httpsAgent: new https.Agent({ rejectUnauthorized: false }),
             onUploadProgress: (progressEvent) => {
                 if (progressEvent.lengthComputable) {
                     console.log(`🚀 Upload Progress: ${(progressEvent.loaded * 100) / progressEvent.total}%`);
@@ -88,11 +92,14 @@ async function createQRIS(amount, codeqr) {
             }
         });
 
+        // Hapus file setelah diupload biar gak numpuk
+        fs.unlinkSync(fileName);
+
         return {
             transactionId: generateTransactionId(),
             amount: amount,
             expirationTime: generateExpirationTime(),
-            qrImageUrl: response.data.fileUrl,
+            qrImageUrl: response.data.fileUrl, // Harusnya ini jadi URL QRIS yang bisa dipakai
             status: "active"
         };
     } catch (error) {
@@ -100,6 +107,9 @@ async function createQRIS(amount, codeqr) {
     }
 }
 
+module.exports = {
+  createQRIS
+};
 module.exports = {
   createQRIS,
   elxyzFile
