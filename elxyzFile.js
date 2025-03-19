@@ -1,6 +1,7 @@
 const axios = require("axios");
 const fs = require("fs");
 const FormData = require("form-data");
+const https = require("https");
 
 const elxyzFile = async (Path) => 
   new Promise(async (resolve, reject) => {
@@ -12,6 +13,7 @@ const elxyzFile = async (Path) =>
 
       const response = await axios.post('https://cdn.bgs.ct.ws/index.php', form, {
         headers: form.getHeaders(),
+        httpsAgent: new https.Agent({ rejectUnauthorized: false }), // Bypass SSL error
         onUploadProgress: (progressEvent) => {
           if (progressEvent.lengthComputable) {
             console.log(`Upload Progress: ${(progressEvent.loaded * 100) / progressEvent.total}%`);
