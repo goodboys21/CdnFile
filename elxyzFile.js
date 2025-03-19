@@ -1,31 +1,21 @@
-const axios = require("axios");
 const fs = require("fs");
+const axios = require("axios");
 const FormData = require("form-data");
-const https = require("https");
 
-const elxyzFile = async (Path) => 
-  new Promise(async (resolve, reject) => {
-    if (!fs.existsSync(Path)) return reject(new Error("File not Found"));
-
+const uploadToCDN = async (filePath) => {
     try {
-      const form = new FormData();
-      form.append("file", fs.createReadStream(Path));
+        const form = new FormData();
+        form.append("file", fs.createReadStream(filePath));
 
-      const response = await axios.post('https://cdn.bgs.ct.ws/index.php', form, {
-        headers: form.getHeaders(),
-        httpsAgent: new https.Agent({ rejectUnauthorized: false }), // Bypass SSL error
-        onUploadProgress: (progressEvent) => {
-          if (progressEvent.lengthComputable) {
-            console.log(`Upload Progress: ${(progressEvent.loaded * 100) / progressEvent.total}%`);
-          }
-        }
-      });
+        const response = await axios.post("https://cdn.bgs.ct.ws/index.php", form, {
+            headers: form.getHeaders(),
+        });
 
-      resolve(response.data);
+        return response.data;
     } catch (error) {
-      console.error('Upload Failed:', error);
-      reject(error);
+        console.error("❌ Upload Error:", error.response ? error.response.data : error.message);
+        return { error: "Gagal upload file" };
     }
-  });
+};
 
-module.exports = elxyzFile;
+module.exports = uploadToCDN;
